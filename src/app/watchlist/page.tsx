@@ -7,7 +7,7 @@ import Navbar from "@/components/Navbar";
 import { WatchlistMovie } from "@/hooks/useWatchlist";
 import MovieModal from "@/components/MovieModal";
 import { getMovieById } from "@/lib/tmdb";
-import { MovieDetails } from "@/types/movie";
+import { Movie, MovieDetails } from "@/types/movie";
 import Link from "next/link";
 
 export default function WatchlistPage() {
@@ -15,9 +15,9 @@ export default function WatchlistPage() {
     const [selectedMovie, setSelectedMovie] = useState<MovieDetails | null>(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
-    const openMovieModal = async (movie: WatchlistMovie) => {
+    const openMovieModal = async (movie: Movie) => {
         try {
-            const details = await getMovieById(movie.movie_id.toString());
+            const details = await getMovieById(movie.id.toString());
             setSelectedMovie(details);
             setIsModalOpen(true);
         } catch (error) {

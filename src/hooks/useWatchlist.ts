@@ -4,11 +4,21 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Movie } from "@/types/movie";
 
-export interface WatchlistMovie extends Partial<Movie> {
+interface WatchlistRow {
     movie_id: number;
     movie_title: string;
     poster_path: string;
     vote_average: number;
+    added_at?: string;
+    overview?: string;
+    backdrop_path?: string;
+    release_date?: string;
+    genre_ids?: number[];
+}
+
+export interface WatchlistMovie extends Movie {
+    movie_id: number;
+    movie_title: string;
     added_at?: string;
     id: number;
     title: string;
@@ -16,19 +26,19 @@ export interface WatchlistMovie extends Partial<Movie> {
 
 type AddToWatchlistResult = "added" | "exists" | "unauthenticated" | "error";
 
-const normalizeWatchlistMovie = (item: WatchlistMovie): WatchlistMovie => {
+const normalizeWatchlistMovie = (item: WatchlistRow): WatchlistMovie => {
     return {
         ...item,
         id: item.movie_id,
         title: item.movie_title,
-        overview: item.overview || "",
-        backdrop_path: item.backdrop_path || "",
-        release_date: item.release_date || "",
-        genre_ids: item.genre_ids || [],
+        overview: item.overview ?? "",
+        backdrop_path: item.backdrop_path ?? "",
+        release_date: item.release_date ?? "",
+        genre_ids: item.genre_ids ?? [],
     };
 };
 
-const dedupeWatchlist = (items: WatchlistMovie[]) => {
+const dedupeWatchlist = (items: WatchlistRow[]) => {
     const uniqueItems = new Map<number, WatchlistMovie>();
 
     items.forEach((item) => {
@@ -74,7 +84,7 @@ export function useWatchlist() {
             return;
         }
 
-        setWatchlist(dedupeWatchlist((data || []) as WatchlistMovie[]));
+        setWatchlist(dedupeWatchlist((data || []) as WatchlistRow[]));
         setLoading(false);
     };
 
