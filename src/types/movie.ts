@@ -20,4 +20,14 @@ export interface MovieDetails extends Movie {
             profile_path: string;
         }>;
     };
+    videos?: {
+        results: Array<{
+            id: string;
+            key: string;
+            name: string;
+            site: string;
+            type: string;
+            official?: boolean;
+        }>;
+    };
 }

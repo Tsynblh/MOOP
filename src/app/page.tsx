@@ -1,6 +1,4 @@
 "use client";
-
-import Image from "next/image";
 import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import MovieCard from "@/components/MovieCard";
@@ -20,7 +18,12 @@ export default function Home() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [loading, setLoading] = useState(true);
     const [notice, setNotice] = useState<NoticeState | null>(null);
+    const [heroMovieIndex, setHeroMovieIndex] = useState(0);
+    const [previousHeroMovieIndex, setPreviousHeroMovieIndex] = useState<number | null>(null);
+    const [isHeroTransitioning, setIsHeroTransitioning] = useState(false);
+    const [isHeroFadingIn, setIsHeroFadingIn] = useState(false);
     const { addToWatchlist } = useWatchlist();
+    const heroMovies = movies.filter((movie) => movie.backdrop_path);
     
 
     useEffect(() => {
@@ -37,6 +40,47 @@ export default function Home() {
 
         fetchMovies();
     }, []);
+
+    useEffect(() => {
+        if (heroMovies.length <= 1) return;
+
+        const intervalId = window.setInterval(() => {
+            setHeroMovieIndex((currentIndex) => {
+                setPreviousHeroMovieIndex(currentIndex);
+                setIsHeroTransitioning(true);
+                setIsHeroFadingIn(false);
+                return (currentIndex + 1) % heroMovies.length;
+            });
+        }, 60000);
+
+        return () => window.clearInterval(intervalId);
+    }, [heroMovies.length]);
+
+    useEffect(() => {
+        if (!isHeroTransitioning) return;
+
+        const frameId = window.requestAnimationFrame(() => {
+            setIsHeroFadingIn(true);
+        });
+
+        const timeoutId = window.setTimeout(() => {
+            setIsHeroTransitioning(false);
+            setIsHeroFadingIn(false);
+            setPreviousHeroMovieIndex(null);
+        }, 1200);
+
+        return () => {
+            window.cancelAnimationFrame(frameId);
+            window.clearTimeout(timeoutId);
+        };
+    }, [isHeroTransitioning]);
+
+    const normalizedHeroMovieIndex = heroMovies.length > 0 ? heroMovieIndex % heroMovies.length : 0;
+    const currentHeroMovie = heroMovies[normalizedHeroMovieIndex] || movies[0];
+    const previousHeroMovie =
+        previousHeroMovieIndex !== null && heroMovies.length > 0
+            ? heroMovies[previousHeroMovieIndex % heroMovies.length]
+            : null;
 
     const openMovieModal = async (movie: Movie) => {
         try {
@@ -103,15 +147,24 @@ export default function Home() {
 
             <div className="pb-12 pt-32 sm:pt-36 lg:pt-24">
                 {/* Hero Section */}
-                <div className="relative flex min-h-[60vh] items-center bg-black sm:min-h-[65vh] lg:min-h-[70vh]">
-                    {movies.length > 0 && (
+                <div className="relative flex min-h-[60vh] items-center overflow-hidden bg-black sm:min-h-[65vh] lg:min-h-[70vh]">
+                    {currentHeroMovie && (
                         <div className="absolute inset-0">
-                            <Image
-                                src={`https://image.tmdb.org/t/p/original${movies[0].backdrop_path}`} 
-                                alt="hero"
-                                fill
-                                priority
-                                className="object-cover opacity-60"
+                            {previousHeroMovie && isHeroTransitioning && (
+                                <div
+                                    className="absolute inset-0 bg-cover bg-center transition-opacity duration-[1200ms] ease-linear"
+                                    style={{
+                                        backgroundImage: `url(https://image.tmdb.org/t/p/original${previousHeroMovie.backdrop_path})`,
+                                        opacity: isHeroFadingIn ? 0 : 0.6,
+                                    }}
+                                />
+                            )}
+                            <div
+                                className="absolute inset-0 bg-cover bg-center transition-opacity duration-[1200ms] ease-linear"
+                                style={{
+                                    backgroundImage: `url(https://image.tmdb.org/t/p/original${currentHeroMovie.backdrop_path})`,
+                                    opacity: isHeroTransitioning ? (isHeroFadingIn ? 0.6 : 0) : 0.6,
+                                }}
                             />
                             <div className="absolute inset-0 bg-linear-to-r from-black via-black/80 to-transparent"></div>
                         </div>

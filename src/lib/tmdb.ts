@@ -9,7 +9,7 @@ export async function getTrendingMovies() {
 
 export async function getMovieById(id: string) {
     const res = await fetch(
-        `${BASE_URL}/movie/${id}?api_key=${API_KEY}&append_to_response=credits&language=id-ID`
+        `${BASE_URL}/movie/${id}?api_key=${API_KEY}&append_to_response=credits,videos&language=id-ID`
     );
     if (!res.ok) throw new Error("Failed to fetch movie details");
     return res.json();
